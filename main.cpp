@@ -9,8 +9,11 @@
 #include "Resource.h"
 #include "enemy.h"
 
+
+
 using namespace std;
 int exitgame = 0;
+int pausedgame = 20;
 
 int main() {
 	
@@ -18,14 +21,39 @@ int main() {
 	sf::RenderWindow window(sf::VideoMode(1024, 576), "Fight Hard Yeah! Tower Defense Game", sf::Style::Close | sf::Style::Titlebar);
 	Audio audio;
 	Graphic graphics;
-	int flag = 0, counter = 0, help = 0;
+	int flag = 0, counter = 0, help = 0, drawtower = 0;
 	sf::Clock clock1; // clock for AI
 	int counter2 = 0, counter3 = 0;
 		
+	//---------------------------------------------------------------------------------------------------------------
 	//Gerardo 
 	//Player character texture, rectangle bound to box
 	sf::Texture playerTexture;
 	playerTexture.loadFromFile("char_sprite_walk_swords.png");
+
+	sf::RectangleShape playerRect;
+	sf::Texture playerTexture2;
+	playerTexture2.loadFromFile("player.png");
+	playerRect.setSize(sf::Vector2f(40.0f, 40.0f));
+	playerRect.setPosition(220.0f, 220.0f);
+	playerRect.setTexture(&playerTexture2);
+	sf::RectangleShape tower1;
+	sf::RectangleShape tower2;
+	sf::RectangleShape tower3;
+	sf::Texture towertex1;
+	sf::Texture towertex2;
+	sf::Texture towertex3;
+	towertex1.loadFromFile("tower1.png");
+	tower1.setSize(sf::Vector2f(30.0f, 40.0f));
+	towertex2.loadFromFile("tower2.png");
+	tower2.setSize(sf::Vector2f(30.0f, 40.0f));
+	towertex3.loadFromFile("tower3.png");
+	tower3.setSize(sf::Vector2f(30.0f, 40.0f));
+	tower1.setTexture(&towertex1);
+	tower2.setTexture(&towertex2);
+	tower3.setTexture(&towertex3);
+	//---------------------------------------------------------------------------------------------------------------
+
 
 	//---------------------------------------------------------------------------------------------------------------
 	//Miguel text on screen
@@ -56,8 +84,8 @@ int main() {
 	vector<Wall>::const_iterator wallit;
 	vector<Wall> wallArray;
 	
-	class Wall wall1, wall2, wall3;
-	sf::Texture textureWall;
+	class Wall wall1, wall2, wall3, wall4;
+	/*sf::Texture textureWall;
 	textureWall.loadFromFile("cave_top.png");
 	wall1.rect.setTexture(&textureWall);
 	sf::Texture textureWall2;
@@ -74,7 +102,21 @@ int main() {
 	wallArray.push_back(wall2);
 	wall3.rect.setPosition(150, 430);
 	wall3.rect.setSize(sf::Vector2f(570, 50));
+	wallArray.push_back(wall3);*/
+
+	wall1.rect.setPosition(0, 0);
+	wall1.rect.setSize(sf::Vector2f(720, 160));
+	wallArray.push_back(wall1);
+	wall2.rect.setPosition(0, 340);
+	wall2.rect.setSize(sf::Vector2f(150, 150));
+	wallArray.push_back(wall2);
+	wall3.rect.setPosition(150, 430);
+	wall3.rect.setSize(sf::Vector2f(570, 50));
 	wallArray.push_back(wall3);
+	wall4.rect.setPosition(560, 240);
+	wall4.rect.setSize(sf::Vector2f(30, 10));
+	wallArray.push_back(wall4);
+
 	//---------------------------------------------------------------------------------------------------------------
 
 
@@ -83,10 +125,12 @@ int main() {
 	vector<Resource>::const_iterator resourceit;
 	vector<Resource> resourceArray;
 	class Resource resource1;
-	sf::Texture textureResource1;
+	//sf::Texture textureResource1;
+	sf::Texture textureResource1, textureResource2, textureResource3;
+
 
 	//Miguel Resource Allocation
-	resource1.resource1 = true;
+	/*resource1.resource1 = true;
 	resource1.resource2 = false;
 	resource1.resource3 = false;
 	resource1.rect.setFillColor(sf::Color::Green);
@@ -103,7 +147,44 @@ int main() {
 	resource1.resource3 = true;
 	resource1.rect.setFillColor(sf::Color::Red);
 	resource1.rect.setPosition(200, 250);
+	resourceArray.push_back(resource1);*/
+	//Miguel Resource Allocation
+
+	resource1.resource1 = true;
+	resource1.resource2 = false;
+	resource1.resource3 = false;
+	textureResource1.loadFromFile("res1.png");
+	resource1.rect.setTexture(&textureResource1);
+	//resource1.rect.setFillColor(sf::Color::Green);
+	resource1.rect.setPosition(300, 350);
 	resourceArray.push_back(resource1);
+	resource1.rect.setPosition(300, 400);
+	resourceArray.push_back(resource1);
+	resource1.resource1 = false;
+
+	resource1.resource1 = false;
+	resource1.resource2 = true;
+	resource1.resource3 = false;
+	textureResource2.loadFromFile("res2.png");
+	resource1.rect.setTexture(&textureResource2);
+	//resource1.rect.setFillColor(sf::Color::Blue);
+	resource1.rect.setPosition(450, 250);
+	resourceArray.push_back(resource1);
+	resource1.rect.setPosition(400, 400);
+	resourceArray.push_back(resource1);
+	resource1.resource2 = false;
+
+	resource1.resource1 = false;
+	resource1.resource2 = false;
+	resource1.resource3 = true;
+	textureResource3.loadFromFile("res3.png");
+	resource1.rect.setTexture(&textureResource3);
+	//resource1.rect.setFillColor(sf::Color::Red);
+	resource1.rect.setPosition(200, 250);
+	resourceArray.push_back(resource1);
+	resource1.rect.setPosition(200, 400);
+	resourceArray.push_back(resource1);
+	resource1.resource3 = false;
 	//---------------------------------------------------------------------------------------------------------------
 
 
@@ -158,42 +239,95 @@ int main() {
 	{
 		deltaTime = clock.restart().asSeconds();
 		sf::Event evnt;
-		while (window.pollEvent(evnt))
-		{
-			switch (evnt.type)
-			{ 
-			case sf::Event::Closed:
-				window.close();
-				break;
-			}
-			if (evnt.type == sf::Event::KeyPressed)
+		//if (pausedgame == 0) {
+			while (window.pollEvent(evnt))
 			{
-				if (evnt.key.code == sf::Keyboard::Escape)
+				switch (evnt.type)
 				{
-					std::cout << "Menu Being Displayed" << std::endl;
-					if (exitgame == 0)
-						exitgame = 1;
-					else
-						exitgame = 0;
+				case sf::Event::Closed:
+					window.close();
+					break;
 				}
-			}
-			//Grabbing Left Button
-			if (evnt.type == sf::Event::MouseButtonPressed)
-			{
-				if (evnt.key.code == sf::Mouse::Left)
+				if (evnt.type == sf::Event::KeyPressed)
 				{
-					std::cout << "left button clicked" << std::endl;
-					sf::Vector2i position = sf::Mouse::getPosition(window);
-					std::cout << position.x << std::endl;
-					std::cout << position.y << std::endl;
+					if (evnt.key.code == sf::Keyboard::Escape)
+					{
+						std::cout << "Menu Being Displayed" << std::endl;
+						if (exitgame == 0)
+							exitgame = 1;
+						else
+							exitgame = 0;
+					}
 				}
+				if (evnt.type == sf::Event::KeyPressed)
+				{
+					if (evnt.key.code == sf::Keyboard::P) {
+						//pausedgame = 1;
+						//Pauses the game for alloted seconds you only have so many seconds to pause
+						if (pausedgame > 0) {
+							sf::sleep(sf::seconds(10));
+							std::cout << "Game Paused" << std::endl;
+							pausedgame -= 10;
+						}
+					}
+				}
+				//---------------------------------------------------------------------------------------------------------------
+				//Gerardo
+				//Grabbing Left Button
+				if (evnt.type == sf::Event::MouseButtonPressed)
+				{
+					/*if (evnt.key.code == sf::Mouse::Left)
+					{
+						std::cout << "left button clicked" << std::endl;
+						sf::Vector2i position = sf::Mouse::getPosition(window);
+						std::cout << position.x << std::endl;
+						std::cout << position.y << std::endl;
+					}*/
+					if (evnt.key.code == sf::Mouse::Right)
+					{
+						drawtower = 1;
+						sf::Vector2i positionTower = sf::Mouse::getPosition(window);
+						std::cout << positionTower.x << std::endl;
+						std::cout << positionTower.y << std::endl;
+						
+						//float posx = positionTower.x;
+						//float posy = positionTower.y;
+
+						if (player.tower == 3)
+						{
+							tower1.setPosition(positionTower.x, positionTower.y);
+							player.tower--;
+							std::cout << "Placing tower on x: " << positionTower.x << ",y: " << positionTower.y << std::endl;
+							//window.draw(tower1);
+						}
+						if (player.tower == 2)
+						{
+							tower2.setPosition(positionTower.x, positionTower.y);
+							player.tower--;
+							std::cout << "Placing tower on x: " << positionTower.x << ",y: " << positionTower.y << std::endl;
+							//window.draw(tower2);
+						}
+						if (player.tower == 1)
+						{
+							tower2.setPosition(positionTower.x, positionTower.y);
+							player.tower--;
+							std::cout << "Placing tower on x: " << positionTower.x << ",y: " << positionTower.y << std::endl;
+							//window.draw(tower3);
+						}
+						//tower1.setPosition(positionTower.x, positionTower.y);
+						//std::cout << "Placing tower on x: " << positionTower.x << ",y: " << positionTower.y << std::endl;
+
+					}
+				}
+				//---------------------------------------------------------------------------------------------------------------
 			}
-		}
+		//} 
 		
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::H))
 		{
 			help ^= 1;
-		}		
+		}
+		
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Num1))
 		{
 			flag = 0;
@@ -253,41 +387,6 @@ int main() {
 		//---------------------------------------------------------------------------------------------------------------
 
 
-		//---------------------------------------------------------------------------------------------------------------
-		//Cuong
-		//Player Wall Collision
-		counter = 0;
-		for (wallit = wallArray.begin(); wallit != wallArray.end(); wallit++) {
-			if (player.body.getGlobalBounds().intersects(wallArray[counter].rect.getGlobalBounds()))
-			{
-				//Hit wall
-				if (player.direction == 1) //Up
-				{
-					player.faceUp = false;
-					player.body.move(0, 1);
-				}
-				else if (player.direction == 2) //Down
-				{
-					player.faceDown = false;
-					player.body.move(0, -1);
-				}
-				else if (player.direction == 3) //Left
-				{
-					player.faceLeft = false;
-					player.body.move(1, 0);
-				}
-				else if (player.direction == 4) //Right
-				{
-					player.faceRight = false;
-					player.body.move(-1, 0);
-				}
-				else {}
-			}
-			counter++;
-		}
-		//---------------------------------------------------------------------------------------------------------------
-
-
 		window.setView(player.view);
 		
 		//---------------------------------------------------------------------------------------------------------------
@@ -322,10 +421,49 @@ int main() {
 			}
 			counter++;
 		}
+
+		//Collision with Resources
+		counter = 0;
+		for (resourceit = resourceArray.begin(); resourceit != resourceArray.end(); resourceit++) {
+			if (player.body.getGlobalBounds().intersects(resourceArray[counter].rect.getGlobalBounds()))
+			{
+				//Hit Resource
+				if (resourceArray[counter].resource1 == true) //resource 1
+				{
+					player.health += 1;
+					cout << "health: " << player.health << endl;
+					resourceArray[counter].gathered = true;
+				}
+				if (resourceArray[counter].resource2 == true) //resource 2
+				{
+					player.ammo += 1;
+					cout << "ammo: " << player.ammo << endl;
+					resourceArray[counter].gathered = true;
+				}
+				if (resourceArray[counter].resource3 == true) //resource 3
+				{
+					player.tower += 1;
+					cout << "tower: " << player.tower << endl;
+					resourceArray[counter].gathered = true;
+				}
+			}
+			counter++;
+		}
+		//Remove Resource
+		counter = 0;
+		for (resourceit = resourceArray.begin(); resourceit != resourceArray.end(); resourceit++)
+		{
+			if (resourceArray[counter].gathered == true)
+			{
+				resourceArray.erase(resourceit);  //clear() removes all
+				break;
+			}
+			counter++;
+		}
 		//---------------------------------------------------------------------------------------------------------------
 				
 		//what is this?
-		window.setView(player.view);
+		//window.setView(player.view);
 
 		player.Update(deltaTime);
 		window.clear(sf::Color(125, 125, 125));
@@ -347,11 +485,15 @@ int main() {
 		}
 		
 		//window.setPosition(sf::Vector2i(50, 50));
-		window.draw(graphics.backgroundTree);
 		player.Draw(window);
 		window.draw(wall1.sprite);
 		window.draw(wall2.sprite);
 		window.draw(wall3.sprite);
+		window.draw(wall4.sprite);
+		window.draw(graphics.backgroundTree);
+
+
+		//window.draw(playerRect);
 
 		//---------------------------------------------------------------------------------------------------------------
 		//Cuong 
@@ -454,6 +596,22 @@ int main() {
 		help == 0 ? window.draw(textHelp) : window.draw(textHelp2);
 		//---------------------------------------------------------------------------------------------------------------
 		
+		/*if (player.tower == 3)
+		{
+			window.draw(tower1);
+		}
+		if (player.tower == 2)
+		{
+			window.draw(tower2);
+		}
+		if (player.tower == 1)
+		{
+			window.draw(tower3);
+		}*/
+		window.draw(tower1);
+		window.draw(tower2);
+		window.draw(tower3);
+
 		//displaying Escape Menu
 		if (exitgame == 1) window.draw(graphics.menuImage);
 		else	graphics.menuImage.setTexture(&graphics.menuTexture);
