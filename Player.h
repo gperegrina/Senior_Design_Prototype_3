@@ -30,6 +30,12 @@ public:
 	bool faceUp = true;
 	bool faceDown = true;
 
+	//Miguel
+	//Player Health+Ammo+Tower
+	int health = 5;
+	int ammo = 3;
+	int tower = 3;
+
 
 private:
 	//sf::RectangleShape body;
