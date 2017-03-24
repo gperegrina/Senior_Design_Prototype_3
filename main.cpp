@@ -8,6 +8,10 @@
 #include "Wall.h"
 #include "Resource.h"
 #include "enemy.h"
+#include "projectile.h" // add by Cuong 03/23
+#include "random.h"// add by Cuong 03/23
+#include "entity.h"// add by Cuong 03/23
+
 
 using namespace std;
 int exitgame = 0;
@@ -20,6 +24,8 @@ int main() {
 	Graphic graphics;
 	int flag = 0, counter = 0, help = 0;
 	sf::Clock clock1; // clock for AI
+	sf::Clock clock2; // clock for AI
+	sf::Clock clock3;// clock for AI
 	int counter2 = 0, counter3 = 0;
 		
 	//Gerardo 
@@ -125,6 +131,16 @@ int main() {
 	if (!textureEnemy.loadFromFile("ghost.png")) {
 		return EXIT_FAILURE;
 	}
+	
+	//---------------------------------------------------- Cuong add on 03/23
+	// Projectile Vector Array
+	vector<projectile>::const_iterator iter;
+	vector<projectile> projectileArray;
+
+	// Projectile Object
+	class projectile projectile1;
+	
+	//--------------------------------------------------------------
 	// Enemy Vector Array
 	vector<enemy>::const_iterator iter4;
 	vector<enemy> enemyArray;
@@ -213,7 +229,8 @@ int main() {
 		
 		
 		//---------------------------------------------------------------------------------------------------------------
-		//Cuong
+		//Cuong 
+		// Enemy Wall Collision
 		counter = 0;
 		for (iter4 = enemyArray.begin(); iter4 != enemyArray.end(); iter4++)
 		{
@@ -254,7 +271,7 @@ int main() {
 
 
 		//---------------------------------------------------------------------------------------------------------------
-		//Cuong
+		//
 		//Player Wall Collision
 		counter = 0;
 		for (wallit = wallArray.begin(); wallit != wallArray.end(); wallit++) {
@@ -357,6 +374,8 @@ int main() {
 		//Cuong 
 		//Drawing Enemy
 		sf::Time elapsed1 = clock1.getElapsedTime();
+		sf::Time elapsed2 = clock2.getElapsedTime(); // add on 03/23
+		sf::Time elapsed3 = clock3.getElapsedTime(); // add on 03/23
 
 		// Enemy Chasing (AI)
 		counter = 0;
@@ -364,9 +383,9 @@ int main() {
 		{
 			if (enemyArray[counter].chase == true)
 			{
-				if (elapsed1.asSeconds() >= 1)
+				if (elapsed3.asSeconds() >= 1)
 				{
-					clock1.restart();
+					clock3.restart();
 					int tempRand = generateRandom(3);
 					if (tempRand == 1) // Track Player Position
 					{
@@ -421,8 +440,9 @@ int main() {
 			}
 			counter++;
 		}
-		enemyArray[counter2].chase = true;
+		//enemyArray[counter2].chase = true;
 		// Draw Enemies
+		// Cuong
 		counter = 0;
 		for (iter4 = enemyArray.begin(); iter4 != enemyArray.end(); iter4++)
 		{
@@ -432,8 +452,92 @@ int main() {
 			window.draw(enemyArray[counter].sprite);
 			counter++;
 		}
-		//---------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------
+// Cuong Add for Projectile on 03/23
+		
+	// Projectile Collides with Enemy
+		counter = 0;
+		for (iter = projectileArray.begin(); iter != projectileArray.end(); iter++)
+		{
+			counter2 = 0;
+			for (iter4 = enemyArray.begin(); iter4 != enemyArray.end(); iter4++)
+			{
+			  if (projectileArray[counter].rect.getGlobalBounds().intersects(enemyArray[counter2].rect.getGlobalBounds()))
+				{
+					cout << "bullet collision with enemy" << endl;
+					
+					projectileArray[counter].destroy = true;
 
+					enemyArray[counter2].hp -= projectileArray[counter].attackDamage;
+					if (enemyArray[counter2].hp <= 0)
+					{
+						enemyArray[counter2].alive = false;
+					}
+					
+					// Chasing
+					enemyArray[counter2].chase = true;
+
+				}
+
+				counter2++;
+			}
+
+			counter++;
+		}
+      
+		// Delete Dead Enemy
+		counter = 0;
+		for (iter4 = enemyArray.begin(); iter4 != enemyArray.end(); iter4++)
+		{
+			if (enemyArray[counter].alive == false)
+			{
+				cout << "Enemy was killed" << endl;
+				enemyArray.erase(iter4);
+				break;
+			}
+
+			counter++;
+		}
+		
+		// Delete Projectile
+		counter = 0;
+		for (iter = projectileArray.begin(); iter != projectileArray.end(); iter++)
+		{
+			if (projectileArray[counter].destroy == true)
+			{
+				cout << "projectile deleted" << endl;
+				projectileArray.erase(iter);
+				break;
+			}
+
+			counter++;
+		}
+	
+		
+		// Player Fires Shoot  (Space bar)
+
+		if (elapsed1.asSeconds() >= 0.1)
+		{
+			clock1.restart();
+			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space))
+			{
+				projectile1.rect.setPosition(player.body.getPosition().x + player.body.getSize().x / 2 - projectile1.rect.getSize().x / 2, player.body.getPosition().y + player.body.getSize().y / 2 - projectile1.rect.getSize().y / 2);
+				projectile1.direction = player.direction;
+				projectileArray.push_back(projectile1);
+			}
+
+		}
+
+		// Draw Projectiles
+		counter = 0;
+		for (iter = projectileArray.begin(); iter != projectileArray.end(); iter++)
+		{
+			projectileArray[counter].update(); // Update Projectile
+			window.draw(projectileArray[counter].rect);
+
+			counter++;
+		}
+		//--------------------------------------------------------------------------------------------------------------
 
 		//---------------------------------------------------------------------------------------------------------------
 		//Miguel Draw Resources
